@@ -22,6 +22,4 @@ public class Constants
     public const int RobberTurn = 3;
     public const int End = 4;
     public const int Restarting = 5;
-
-
 }
