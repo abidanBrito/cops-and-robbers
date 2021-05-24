@@ -48,15 +48,46 @@ public class Controller : MonoBehaviour
 
     public void InitAdjacencyLists()
     {
-        //Matriz de adyacencia
-        int[,] matriu = new int[Constants.NumTiles, Constants.NumTiles];
+        // Adjacency matrix
+        int[,] matrix = new int[Constants.NumTiles, Constants.NumTiles];
 
-        //TODO: Inicializar matriz a 0's
+        // Initialize matriz values to 0
+        // NOTE(abi): this is an unnecessary step, as integer arrays are initialized to 0 by default in C#.
+        //for (int i = 0; i < Constants.NumTiles; ++i)
+        //{
+            //for (int j = 0; j < Constants.NumTiles; ++j)
+            //{
+            //    matrix[i, j] = 0;
+            //}
+        //}
 
-        //TODO: Para cada posición, rellenar con 1's las casillas adyacentes (arriba, abajo, izquierda y derecha)
+        // Set to 1 all adjacent cells (top, bottom, right, left) for each individual cell
+        for (int i = 0; i < Constants.NumTiles; i++)
+        {
+            // Top
+            if (i > 7) { matrix[i, i - 8] = 1; }
+            
+            // Bottom
+            if (i < 56) { matrix[i, i + 8] = 1; }
 
-        //TODO: Rellenar la lista "adjacency" de cada casilla con los índices de sus casillas adyacentes
-
+            // Right
+            if (((i + 1) % 8) != 0) { matrix[i, i + 1] = 1; }
+           
+            // Left
+            if (i % 8 != 0) { matrix[i, i - 1] = 1; }
+        }
+        
+        // Fill adjacency list for each cell with the indexes of its adjacent neighbours
+        for (int i = 0; i < Constants.NumTiles; ++i)
+        {
+            for (int j = 0; j < Constants.NumTiles; ++j)
+            {
+                if (matrix[i, j] == 1)
+                {
+                    tiles[i].adjacency.Add(j);
+                }
+            }
+        }
     }
 
     //Reseteamos cada casilla: color, padre, distancia y visitada
@@ -176,8 +207,7 @@ public class Controller : MonoBehaviour
 
     public void InitGame()
     {
-        state = Constants.Init;
-         
+        state = Constants.Init;     
     }
 
     public void IncreaseRoundCount()
@@ -187,8 +217,7 @@ public class Controller : MonoBehaviour
     }
 
     public void FindSelectableTiles(bool cop)
-    {
-                 
+    {        
         int indexcurrentTile;        
 
         if (cop==true)
@@ -208,16 +237,5 @@ public class Controller : MonoBehaviour
         {
             tiles[i].selectable = true;
         }
-
-
-    }
-    
-   
-    
-
-    
-
-   
-
-       
+    }       
 }
