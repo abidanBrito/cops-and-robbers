@@ -1,5 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,6 +15,7 @@ public class Controller : MonoBehaviour
 
     //Otras variables
     Tile[] tiles = new Tile[Constants.NumTiles];
+    Dictionary<Tile, List<int>> robberAdjDistances = new Dictionary<Tile, List<int>>();
     private int roundCount = 0;
     private int state;
     private int clickedTile = -1;
@@ -168,16 +169,65 @@ public class Controller : MonoBehaviour
 
     public void RobberTurn()
     {
-        clickedTile = robber.GetComponent<RobberMove>().currentTile;
+        RobberMove robberMove = robber.GetComponent<RobberMove>();
+        clickedTile = robberMove.currentTile;
         tiles[clickedTile].current = true;
         FindSelectableTiles(false);
 
-        /*TODO: Cambia el código de abajo para hacer lo siguiente
-        - Elegimos una casilla aleatoria entre las seleccionables que puede ir el caco
-        - Movemos al caco a esa casilla
-        - Actualizamos la variable currentTile del caco a la nueva casilla
-        */
-        robber.GetComponent<RobberMove>().MoveToTile(tiles[robber.GetComponent<RobberMove>().currentTile]);
+        // Add selectable tiles to the dictionary
+        robberAdjDistances.Clear();
+        foreach (Tile t in tiles)
+        {
+            if (t.selectable)
+            {
+                robberAdjDistances.Add(t, new List<int>());
+            }
+        }
+
+        // Compute distance to every cops
+        for (int i = 0; i < cops.Count(); ++i)
+        {
+            clickedCop = i;
+            clickedTile = cops[i].GetComponent<CopMove>().currentTile;
+            tiles[clickedTile].current = true;
+            
+            // Update after each cop    
+            ResetTiles();
+            FindSelectableTiles(true);
+        }
+
+        int maxDistance = 0;
+        Tile destinyTile = new Tile();
+
+        foreach (Tile t in robberAdjDistances.Keys)
+        {
+            // Pick the one that's the furthest from them all
+            if (robberAdjDistances[t].Sum() > maxDistance)
+            {
+                destinyTile = t;
+                maxDistance = robberAdjDistances[t].Sum();
+            }
+            
+            // Otherwise, pick the one with the largest distance numbers
+            else if (robberAdjDistances[t].Sum() == maxDistance)
+            {
+                bool isFurther = true;
+                foreach (int d in robberAdjDistances[t])
+                {
+                    if (d < robberAdjDistances[destinyTile][0]
+                    && d < robberAdjDistances[destinyTile][1])
+                    {
+                        isFurther = false;
+                    }
+                }
+                
+                if (isFurther) { destinyTile = t; }
+            }
+        }
+
+        ResetTiles();
+        robberMove.currentTile = destinyTile.numTile;
+        robberMove.MoveToTile(destinyTile);
     }
 
     public void EndGame(bool endCode)
@@ -233,6 +283,11 @@ public class Controller : MonoBehaviour
             {
                 t.selectable = true;
             }
+
+            if (isCop && robberAdjDistances.ContainsKey(t) && robberAdjDistances.Count > 0)
+            {
+                robberAdjDistances[t].Add(t.distance);
+            }
         }
     }
 
@@ -281,7 +336,8 @@ public class Controller : MonoBehaviour
             {
                 if (copIndices.Contains(curr.numTile))
                 {
-                    curr.distance = Constants.Distance + 1;
+                    //curr.distance = Constants.Distance + 1;
+                    curr.distance = curr.parent.distance + 1;
                     curr.visited = true;
                 }
                 else
