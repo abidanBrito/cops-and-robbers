@@ -279,7 +279,8 @@ public class Controller : MonoBehaviour
         // Filter by selectable tiles (no cop and reachable within 2 moves)
         foreach (Tile t in tiles)
         {
-            if (!copTileIndices.Contains(t.numTile) && t.distance <= Constants.Distance)
+            if (!copTileIndices.Contains(t.numTile) 
+            && t.distance <= Constants.Distance && t.distance > 0)
             {
                 t.selectable = true;
             }
